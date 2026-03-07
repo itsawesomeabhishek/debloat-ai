@@ -146,6 +146,20 @@ class ADBOperations:
         except Exception as e:
             raise ADBError(f"Failed to list packages: {str(e)}")
     
+    @staticmethod
+    def is_valid_package_name(package_name: str) -> bool:
+        """
+        Validate if a package name follows Android naming conventions.
+        - Must start with a letter.
+        - Can contain letters, numbers, underscores, and dots.
+        - Each segment (separated by dot) must start with a letter.
+        - Prevents flag injection as it cannot start with a hyphen.
+        """
+        if not package_name:
+            return False
+        pattern = r'^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)*$'
+        return bool(re.match(pattern, package_name))
+
     def _guess_package_type(self, package: str) -> str:
         """Guess if package is system or user app"""
         system_prefixes = [
@@ -233,6 +247,12 @@ class ADBOperations:
     
     def uninstall_package(self, package_name: str) -> Dict:
         """Uninstall a package from device"""
+        if not self.is_valid_package_name(package_name):
+            return {
+                "success": False,
+                "message": f"Invalid package name: {package_name}"
+            }
+
         try:
             # Try uninstall
             output = self._run_command(
@@ -258,6 +278,12 @@ class ADBOperations:
     
     def reinstall_package(self, package_name: str) -> Dict:
         """Reinstall a previously removed package"""
+        if not self.is_valid_package_name(package_name):
+            return {
+                "success": False,
+                "message": f"Invalid package name: {package_name}"
+            }
+
         try:
             # Reinstall for user 0
             output = self._run_command(
