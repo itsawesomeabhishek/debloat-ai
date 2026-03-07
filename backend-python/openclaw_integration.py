@@ -286,7 +286,8 @@ class ActionExecutor:
             'netflix', 'spotify', 'amazon',
             'samsung.', 'xiaomi.', 'miui.', 'huawei.',
             'weather', 'news', 'browser',
-            'game', 'music', 'video'
+            'game', 'music', 'video',
+            'trill', 'musically', 'bytepals'
         ]
         
         # Don't flag critical system apps
