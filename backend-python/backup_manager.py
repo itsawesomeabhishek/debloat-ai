@@ -23,6 +23,25 @@ class BackupManager:
         
         # Create backup directory if it doesn't exist
         self.backup_dir.mkdir(parents=True, exist_ok=True)
+
+    def _get_safe_backup_path(self, backup_name: str) -> Path:
+        """Securely resolve and validate a backup path to prevent directory traversal.
+
+        Ensures the final path uses only the filename component and
+        is strictly within the backup directory.
+        """
+        # Extract just the filename to neutralize traversal sequences
+        safe_name = Path(backup_name).name
+
+        # Resolve the full path
+        backup_path = (self.backup_dir / safe_name).resolve()
+        resolved_backup_dir = self.backup_dir.resolve()
+
+        # Verify it stays within bounds (defense-in-depth)
+        if not backup_path.is_relative_to(resolved_backup_dir):
+            raise ValueError(f"Invalid backup path: Path traversal detected")
+
+        return backup_path
     
     def create_backup(self, packages: List[str], device_info: Dict = None) -> Dict:
         """Create a backup of packages"""
@@ -86,7 +105,7 @@ class BackupManager:
     def restore_backup(self, backup_name: str) -> Dict:
         """Restore packages from a backup"""
         try:
-            backup_path = self.backup_dir / backup_name
+            backup_path = self._get_safe_backup_path(backup_name)
             
             if not backup_path.exists():
                 return {
@@ -115,7 +134,7 @@ class BackupManager:
     def delete_backup(self, backup_name: str) -> Dict:
         """Delete a backup file"""
         try:
-            backup_path = self.backup_dir / backup_name
+            backup_path = self._get_safe_backup_path(backup_name)
             
             if not backup_path.exists():
                 return {
