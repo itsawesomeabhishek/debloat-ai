@@ -198,14 +198,25 @@ class ActionExecutor:
             
             # Find matching packages
             matches = []
+
+            # Pre-compile regex and set for O(1) and optimized substring matching
+            lower_keywords = [k.lower() for k in package_names]
+            exact_matches = set(lower_keywords)
+
+            # Only compile regex if there are keywords to prevent empty pattern errors
+            if lower_keywords:
+                pattern = re.compile('|'.join(re.escape(k) for k in lower_keywords))
+            else:
+                pattern = None
+
             for pkg in all_packages:
                 pkg_name = pkg['packageName'].lower()
                 
-                # Direct match
-                if pkg_name in package_names:
+                # Direct match (O(1) lookup)
+                if pkg_name in exact_matches:
                     matches.append(pkg)
                 # Fuzzy match by keywords
-                elif any(keyword.lower() in pkg_name for keyword in package_names):
+                elif pattern and pattern.search(pkg_name):
                     matches.append(pkg)
             
             if not matches:
