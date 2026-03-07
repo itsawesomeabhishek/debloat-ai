@@ -3,7 +3,6 @@ Backup Manager Module
 Handles backup and restore of uninstalled packages
 """
 import json
-import os
 from datetime import datetime
 from typing import List, Dict
 from pathlib import Path
