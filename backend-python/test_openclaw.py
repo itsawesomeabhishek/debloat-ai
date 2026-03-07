@@ -81,6 +81,73 @@ def test_action_execution():
         print(f"   Error: {str(e)}")
 
 
+
+def test_confirm_and_execute():
+    """Test confirm_and_execute logic"""
+    print("\n" + "=" * 60)
+    print("TESTING CONFIRM AND EXECUTE")
+    print("=" * 60)
+
+    from unittest.mock import MagicMock
+
+    mock_adb = MagicMock()
+    executor = ActionExecutor(mock_adb)
+
+    # Test unconfirmed action
+    print("\n❌ Testing unconfirmed action...")
+    result = executor.confirm_and_execute({'action': 'uninstall'}, False)
+    print(f"   Success: {result['success']}")
+    print(f"   Message: {result['message']}")
+    assert result['success'] is True
+    assert 'cancelled' in result['message']
+
+    # Test invalid action
+    print("\n❓ Testing invalid action...")
+    result = executor.confirm_and_execute({'action': 'unknown_action'}, True)
+    print(f"   Success: {result['success']}")
+    print(f"   Message: {result['message']}")
+    assert result['success'] is False
+    assert 'Cannot execute action' in result['message']
+
+    # Test uninstall action
+    print("\n🗑️  Testing confirmed UNINSTALL...")
+    mock_adb.uninstall_package.return_value = {'success': True, 'message': 'Success'}
+    uninstall_action = {
+        'action': 'uninstall',
+        'data': {'packages': [{'packageName': 'com.test.app'}]}
+    }
+    result = executor.confirm_and_execute(uninstall_action, True)
+    print(f"   Success: {result['success']}")
+    print(f"   Message: {result['message']}")
+    assert result['success'] is True
+    mock_adb.uninstall_package.assert_called_once_with('com.test.app')
+
+    # Test restore action
+    print("\n♻️  Testing confirmed RESTORE...")
+    mock_adb.reinstall_package.return_value = {'success': True, 'message': 'Success'}
+    restore_action = {
+        'action': 'restore',
+        'data': {'package': 'com.test.app'}
+    }
+    result = executor.confirm_and_execute(restore_action, True)
+    print(f"   Success: {result['success']}")
+    print(f"   Message: {result['message']}")
+    assert result['success'] is True
+    mock_adb.reinstall_package.assert_called_once_with('com.test.app')
+
+    # Test backup action
+    print("\n💾 Testing confirmed BACKUP...")
+    backup_action = {
+        'action': 'backup',
+        'data': {}
+    }
+    result = executor.confirm_and_execute(backup_action, True)
+    print(f"   Success: {result.get('success', False)}")
+    print(f"   Message: {result.get('message', '')}")
+    assert result.get('success') is True
+
+
+
 def test_full_integration():
     """Test full OpenClaw integration"""
     print("\n" + "=" * 60)
@@ -123,6 +190,7 @@ if __name__ == "__main__":
     # Run tests
     test_command_parser()
     test_action_execution()
+    test_confirm_and_execute()
     test_full_integration()
     
     print("\n" + "=" * 60)
