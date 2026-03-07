@@ -24,6 +24,20 @@ class BackupManager:
         # Create backup directory if it doesn't exist
         self.backup_dir.mkdir(parents=True, exist_ok=True)
     
+    def _get_safe_backup_path(self, backup_name: str) -> Path:
+        """
+        Safely resolve a backup file name to a path, preventing directory traversal.
+        """
+        # Ensure we only use the filename, stripping any directory components
+        safe_name = Path(backup_name).name
+        backup_path = (self.backup_dir / safe_name).resolve()
+
+        # Verify the resolved path is actually within the backup directory
+        if not backup_path.is_relative_to(self.backup_dir.resolve()):
+            raise ValueError(f"Invalid backup name: {backup_name}")
+
+        return backup_path
+
     def create_backup(self, packages: List[str], device_info: Dict = None) -> Dict:
         """Create a backup of packages"""
         try:
@@ -86,7 +100,7 @@ class BackupManager:
     def restore_backup(self, backup_name: str) -> Dict:
         """Restore packages from a backup"""
         try:
-            backup_path = self.backup_dir / backup_name
+            backup_path = self._get_safe_backup_path(backup_name)
             
             if not backup_path.exists():
                 return {
@@ -115,7 +129,7 @@ class BackupManager:
     def delete_backup(self, backup_name: str) -> Dict:
         """Delete a backup file"""
         try:
-            backup_path = self.backup_dir / backup_name
+            backup_path = self._get_safe_backup_path(backup_name)
             
             if not backup_path.exists():
                 return {
