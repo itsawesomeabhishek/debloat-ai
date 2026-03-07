@@ -16,6 +16,53 @@ class ADBError(Exception):
 class ADBOperations:
     """Handle all ADB-related operations"""
     
+    # Class-level constants for performance optimization
+    DANGEROUS_PACKAGES = frozenset({
+        'com.android.systemui',
+        'com.android.phone',
+        'com.android.settings',
+        'com.android.launcher',
+        'com.android.launcher3',
+        'com.android.vending',  # Play Store
+    })
+
+    EXPERT_PREFIXES = (
+        'com.google.android.gms',  # Google Play Services
+        'com.google.android.gsf',  # Google Services Framework
+        'com.android.bluetooth',
+        'com.android.nfc',
+    )
+
+    CAUTION_PREFIXES = (
+        'com.samsung.',
+        'com.xiaomi.',
+        'com.miui.',
+        'com.huawei.',
+        'com.oppo.',
+        'com.vivo.',
+        'com.realme.',
+        'com.oneplus.',
+    )
+
+    SYSTEM_PREFIXES = (
+        'com.android.',
+        'com.google.',
+        'com.samsung.',
+        'com.xiaomi.',
+        'com.huawei.',
+        'com.oppo.',
+        'com.vivo.',
+        'android.',
+    )
+
+    COMMON_PREFIXES = (
+        'com.android.',
+        'com.google.',
+        'com.',
+        'org.',
+        'net.',
+    )
+
     @staticmethod
     def is_valid_package_name(package_name: str) -> bool:
         """Validate Android package name format to prevent injection attacks"""
@@ -157,28 +204,15 @@ class ADBOperations:
     
     def _guess_package_type(self, package: str) -> str:
         """Guess if package is system or user app"""
-        system_prefixes = [
-            'com.android.',
-            'com.google.',
-            'com.samsung.',
-            'com.xiaomi.',
-            'com.huawei.',
-            'com.oppo.',
-            'com.vivo.',
-            'android.'
-        ]
-        
-        for prefix in system_prefixes:
-            if package.startswith(prefix):
-                return "system"
+        if package.startswith(self.SYSTEM_PREFIXES):
+            return "system"
         return "user"
     
     def _get_app_name(self, package_name: str) -> str:
         """Extract a friendly app name from package name"""
         # Remove common prefixes
         name = package_name
-        prefixes = ['com.android.', 'com.google.', 'com.', 'org.', 'net.']
-        for prefix in prefixes:
+        for prefix in self.COMMON_PREFIXES:
             if name.startswith(prefix):
                 name = name[len(prefix):]
                 break
@@ -193,49 +227,17 @@ class ADBOperations:
     
     def _determine_safety_level(self, package_name: str) -> str:
         """Determine safety level for removing a package"""
-        # Dangerous - Critical system apps
-        dangerous_packages = {
-            'com.android.systemui',
-            'com.android.phone',
-            'com.android.settings',
-            'com.android.launcher',
-            'com.android.launcher3',
-            'com.android.vending',  # Play Store
-        }
-        
-        # Expert - May break functionality
-        expert_prefixes = [
-            'com.google.android.gms',  # Google Play Services
-            'com.google.android.gsf',  # Google Services Framework
-            'com.android.bluetooth',
-            'com.android.nfc',
-        ]
-        
-        # Caution - OEM apps
-        caution_prefixes = [
-            'com.samsung.',
-            'com.xiaomi.',
-            'com.miui.',
-            'com.huawei.',
-            'com.oppo.',
-            'com.vivo.',
-            'com.realme.',
-            'com.oneplus.',
-        ]
-        
         # Check dangerous
-        if package_name in dangerous_packages:
+        if package_name in self.DANGEROUS_PACKAGES:
             return "Dangerous"
         
         # Check expert
-        for prefix in expert_prefixes:
-            if package_name.startswith(prefix):
-                return "Expert"
+        if package_name.startswith(self.EXPERT_PREFIXES):
+            return "Expert"
         
         # Check caution
-        for prefix in caution_prefixes:
-            if package_name.startswith(prefix):
-                return "Caution"
+        if package_name.startswith(self.CAUTION_PREFIXES):
+            return "Caution"
         
         # Default to Safe (user apps, bloatware)
         return "Safe"
