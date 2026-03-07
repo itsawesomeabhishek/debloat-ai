@@ -7,6 +7,59 @@ import json
 from adb_operations import ADBOperations, ADBError
 from backup_manager import BackupManager
 
+def test_security_validation():
+    """Test security validation for package names"""
+    print("\n🛡️ Testing Security Validation...")
+
+    try:
+        from adb_operations import ADBOperations
+
+        # Test valid package names
+        valid_packages = [
+            "com.android.vending",
+            "com.facebook.katana",
+            "org.fdroid.fdroid",
+            "net.sourceforge.opencamera",
+            "a.b.c",
+            "com.example.app_name"
+        ]
+
+        print("  ├─ Testing valid package names...")
+        for pkg in valid_packages:
+            if not ADBOperations.is_valid_package_name(pkg):
+                print(f"  ├─ ❌ Failed on valid package: {pkg}")
+                return False
+
+        # Test invalid/malicious package names
+        invalid_packages = [
+            "com.example.app; rm -rf /",
+            "com.example.app && echo 'hacked'",
+            "--user 1 com.example.app",
+            "com.example.app|grep foo",
+            "com.example.app>out.txt",
+            "com..example",
+            "1com.example",
+            "com.example.",
+            "com.example..app",
+            "com/example/app",
+            "",
+            " "
+        ]
+
+        print("  ├─ Testing invalid/malicious package names...")
+        for pkg in invalid_packages:
+            if ADBOperations.is_valid_package_name(pkg):
+                print(f"  ├─ ❌ Failed on invalid package: '{pkg}'")
+                return False
+
+        print("  └─ ✅ All security validations passed")
+        return True
+
+    except Exception as e:
+        print(f"  └─ ❌ Error: {e}")
+        return False
+
+
 def test_adb():
     """Test ADB operations"""
     print("\n🔧 Testing ADB Operations...")
@@ -119,6 +172,7 @@ def main():
     print("=" * 60)
     
     results = {
+        'Security Validation': test_security_validation(),
         'ADB Operations': test_adb(),
         'Backup Manager': test_backup(),
         'AI Advisor': test_ai()
