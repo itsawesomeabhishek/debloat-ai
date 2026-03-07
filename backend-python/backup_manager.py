@@ -86,7 +86,7 @@ class BackupManager:
     def restore_backup(self, backup_name: str) -> Dict:
         """Restore packages from a backup"""
         try:
-            backup_path = self.backup_dir / backup_name
+            backup_path = self._get_safe_backup_path(backup_name)
             
             if not backup_path.exists():
                 return {
@@ -115,7 +115,7 @@ class BackupManager:
     def delete_backup(self, backup_name: str) -> Dict:
         """Delete a backup file"""
         try:
-            backup_path = self.backup_dir / backup_name
+            backup_path = self._get_safe_backup_path(backup_name)
             
             if not backup_path.exists():
                 return {
@@ -136,6 +136,21 @@ class BackupManager:
                 "message": f"Failed to delete backup: {str(e)}"
             }
     
+    def _get_safe_backup_path(self, backup_name: str) -> Path:
+        """
+        Sanitize and validate backup name to prevent path traversal.
+        Only allows files within the backup directory.
+        """
+        # Take only the filename part to prevent directory traversal
+        safe_name = Path(backup_name).name
+        target_path = (self.backup_dir / safe_name).resolve()
+
+        # Verify the path is still within backup_dir
+        if not target_path.is_relative_to(self.backup_dir.resolve()):
+            raise ValueError(f"Invalid backup name: {backup_name}")
+
+        return target_path
+
     def get_backup_path(self) -> str:
         """Get the backup directory path"""
         return str(self.backup_dir)
