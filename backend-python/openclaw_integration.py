@@ -196,16 +196,19 @@ class ActionExecutor:
         try:
             all_packages = self.adb.list_packages('all')
             
+            # Pre-process package_names to lowercase to avoid redundant operations
+            package_names_lower = [name.lower() for name in package_names]
+
             # Find matching packages
             matches = []
             for pkg in all_packages:
                 pkg_name = pkg['packageName'].lower()
                 
                 # Direct match
-                if pkg_name in package_names:
+                if pkg_name in package_names_lower:
                     matches.append(pkg)
                 # Fuzzy match by keywords
-                elif any(keyword.lower() in pkg_name for keyword in package_names):
+                elif any(keyword in pkg_name for keyword in package_names_lower):
                     matches.append(pkg)
             
             if not matches:
