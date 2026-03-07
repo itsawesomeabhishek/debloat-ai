@@ -231,8 +231,20 @@ class ADBOperations:
         # Default to Safe (user apps, bloatware)
         return "Safe"
     
+    @staticmethod
+    def is_valid_package_name(package_name: str) -> bool:
+        """Validate Android package name format to prevent injection"""
+        pattern = re.compile(r'^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)*$')
+        return bool(pattern.match(package_name))
+
     def uninstall_package(self, package_name: str) -> Dict:
         """Uninstall a package from device"""
+        if not self.is_valid_package_name(package_name):
+            return {
+                "success": False,
+                "message": f"Invalid package name format: {package_name}"
+            }
+
         try:
             # Try uninstall
             output = self._run_command(
@@ -258,6 +270,12 @@ class ADBOperations:
     
     def reinstall_package(self, package_name: str) -> Dict:
         """Reinstall a previously removed package"""
+        if not self.is_valid_package_name(package_name):
+            return {
+                "success": False,
+                "message": f"Invalid package name format: {package_name}"
+            }
+
         try:
             # Reinstall for user 0
             output = self._run_command(
