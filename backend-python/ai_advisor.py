@@ -8,6 +8,7 @@ import json
 import requests
 from typing import Dict
 from dotenv import load_dotenv
+from adb_operations import ADBOperations
 
 
 def _get_base_dir():
@@ -50,6 +51,15 @@ class AIAdvisor:
     
     def analyze_package(self, package_name: str) -> Dict:
         """Analyze an Android package and return safety information"""
+        if not ADBOperations.is_valid_package_name(package_name):
+            return {
+                "error": f"Invalid package name: {package_name}",
+                "safetyLevel": "unknown",
+                "appName": package_name,
+                "description": "Validation failed",
+                "recommendation": "Please provide a valid Android package name"
+            }
+
         if not self.api_key:
             return {"error": "API key not configured. Add PERPLEXITY_API_KEY to .env file.", "safetyLevel": "unknown", "appName": package_name, "description": "AI analysis unavailable", "recommendation": "Configure API key to enable AI analysis"}
         
