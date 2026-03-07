@@ -11,7 +11,6 @@ The backend runs as a persistent process, communicating with Electron via JSON o
 | `ai_advisor.py` | Perplexity/OpenAI integration for package analysis and chat |
 | `openclaw_integration.py` | Natural language command parsing and action execution |
 | `backup_manager.py` | Create, list, restore, and delete package backups |
-| `api_types.py` | Shared type definitions |
 
 ## Setup
 
