@@ -14,23 +14,24 @@ class CommandParser:
     def __init__(self):
         self.intent_patterns = {
             'uninstall': [
-                r'\b(remove|uninstall|delete|get rid of)\s+(.+)',
-                r'\b(disable|turn off)\s+(.+)',
+                re.compile(r'\b(remove|uninstall|delete|get rid of)\s+(.+)'),
+                re.compile(r'\b(disable|turn off)\s+(.+)'),
             ],
             'scan': [
-                r'\b(scan|check|find|show|list)\s+(bloatware|packages|apps)',
-                r'what (bloatware|packages|apps)',
+                re.compile(r'\b(scan|check|find|show|list)\s+(bloatware|packages|apps)'),
+                re.compile(r'what (bloatware|packages|apps)'),
             ],
             'backup': [
-                r'\b(create|make|backup)\s+(backup|save)',
+                re.compile(r'\b(create|make|backup)\s+(backup|save)'),
             ],
             'restore': [
-                r'\b(restore|reinstall)\s+(.+)',
+                re.compile(r'\b(restore|reinstall)\s+(.+)'),
             ],
             'analyze': [
-                r'\b(analyze|check|tell me about|info about|what is)\s+(.+)',
+                re.compile(r'\b(analyze|check|tell me about|info about|what is)\s+(.+)'),
             ],
         }
+        self.package_pattern = re.compile(r'com\.[a-zA-Z0-9_.]+|[a-z]+\.[a-zA-Z0-9_.]+\.[a-zA-Z0-9_]+')
     
     def parse_command(self, message: str) -> Dict:
         """
@@ -49,7 +50,7 @@ class CommandParser:
         # Check each intent pattern
         for intent, patterns in self.intent_patterns.items():
             for pattern in patterns:
-                match = re.search(pattern, message_lower)
+                match = pattern.search(message_lower)
                 if match:
                     entities = self._extract_entities(intent, match, message_lower)
                     return {
@@ -94,8 +95,7 @@ class CommandParser:
     def _extract_package_names(self, text: str) -> List[str]:
         """Extract potential package names from text"""
         # Check for actual package format (com.example.package)
-        package_pattern = r'com\.[a-zA-Z0-9_.]+|[a-z]+\.[a-zA-Z0-9_.]+\.[a-zA-Z0-9_]+'
-        packages = re.findall(package_pattern, text)
+        packages = self.package_pattern.findall(text)
         
         if packages:
             return packages
