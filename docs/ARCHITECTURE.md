@@ -73,7 +73,6 @@ debloat-ai/
 │   ├── adb_operations.py       # ADB command wrappers
 │   ├── ai_advisor.py           # Perplexity AI integration
 │   ├── backup_manager.py       # Backup/restore logic
-│   ├── api_types.py            # Type definitions (reference)
 │   ├── requirements.txt        # Python dependencies
 │   ├── backend.spec            # PyInstaller build spec
 │   ├── test_backend.py         # Backend tests
