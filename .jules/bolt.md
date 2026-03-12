@@ -4,3 +4,6 @@
 ## 2024-05-24 - AI Package Scanning Bottleneck
 **Learning:** Re-evaluating lists or compiling regexes on every package check in `_is_likely_bloatware` within the Python backend causes a significant performance overhead when scanning thousands of installed Android packages.
 **Action:** Always extract static indicator arrays into class-level pre-compiled regex objects (`re.compile`) and exact-match exclusions into `frozenset` objects to achieve O(1) lookups and significantly faster substring matching.
+## 2024-05-25 - Python String Parsing Overhead
+**Learning:** In Python backend scripts (e.g., `adb_operations.py`), iterating over large command outputs using `str.split('\n')` and modifying strings with `.replace()` and `.split('.')` inside loops introduces measurable overhead due to intermediate list allocations.
+**Action:** Always prefer `str.splitlines()` in list comprehensions combined with string slicing (e.g., `line[8:]`) and `str.find()` with slice indexing (`name[:dot_idx]`) for significantly faster string manipulation and parsing.
