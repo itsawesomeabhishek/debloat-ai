@@ -183,16 +183,20 @@ class ADBOperations:
             
             output = self._run_command(cmd)
             
-            packages = []
-            for line in output.split('\n'):
-                if line.startswith('package:'):
-                    package_name = line.replace('package:', '').strip()
-                    if package_name:
-                        packages.append({
-                            "packageName": package_name,
-                            "appName": self._get_app_name(package_name),
-                            "safetyLevel": self._determine_safety_level(package_name)
-                        })
+            # Use local references for faster lookups inside the loop
+            get_app_name = self._get_app_name
+            determine_safety_level = self._determine_safety_level
+
+            # ⚡ Bolt: Fast string slicing, assignment expressions, and list comprehension
+            packages = [
+                {
+                    "packageName": pkg_name,
+                    "appName": get_app_name(pkg_name),
+                    "safetyLevel": determine_safety_level(pkg_name)
+                }
+                for line in output.splitlines()
+                if line.startswith('package:') and (pkg_name := line[8:].strip())
+            ]
             
             # Sort by package name
             packages.sort(key=lambda p: p["packageName"])
@@ -218,9 +222,10 @@ class ADBOperations:
                 break
         
         # Split by dots and take the most relevant part
-        parts = name.split('.')
-        if parts:
-            name = parts[0]
+        # ⚡ Bolt: Using find and slice is much faster than split() and list index
+        dot_idx = name.find('.')
+        if dot_idx != -1:
+            name = name[:dot_idx]
         
         # Capitalize first letter
         return name.capitalize()
