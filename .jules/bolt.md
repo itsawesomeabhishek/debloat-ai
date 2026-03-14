@@ -7,3 +7,6 @@
 ## 2024-05-25 - Python String Parsing Overhead
 **Learning:** In Python backend scripts (e.g., `adb_operations.py`), iterating over large command outputs using `str.split('\n')` and modifying strings with `.replace()` and `.split('.')` inside loops introduces measurable overhead due to intermediate list allocations.
 **Action:** Always prefer `str.splitlines()` in list comprehensions combined with string slicing (e.g., `line[8:]`) and `str.find()` with slice indexing (`name[:dot_idx]`) for significantly faster string manipulation and parsing.
+## 2024-05-25 - Python Class Instantiation Regex Overhead
+**Learning:** Initializing dictionaries or lists with `re.compile()` within a class `__init__` method incurs unnecessary instantiation overhead when the class is created repeatedly, especially for stateless parsers like `CommandParser`. Furthermore, nested dictionary iterations (`items()`) inside `parse_command` add unnecessary complexity and slow down command processing compared to a single flat iteration list.
+**Action:** Always extract static regular expressions and patterns to module-level constants. If multiple patterns belong to different intents, flatten them into a single list of tuples (e.g., `[(intent, pattern)]`) to enable faster O(n) single loop traversal and bypass `__init__` overhead entirely.

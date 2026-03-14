@@ -8,30 +8,26 @@ from typing import Dict, List, Optional, Tuple
 from adb_operations import ADBOperations
 
 
+# ⚡ Bolt: Flatten intent patterns and package pattern as class-level constants
+# to prevent re-compiling and dictionary iteration overhead on every command parse.
+_INTENT_PATTERNS_FLAT = [
+    ('uninstall', re.compile(r'\b(remove|uninstall|delete|get rid of)\s+(.+)')),
+    ('uninstall', re.compile(r'\b(disable|turn off)\s+(.+)')),
+    ('scan', re.compile(r'\b(scan|check|find|show|list)\s+(bloatware|packages|apps)')),
+    ('scan', re.compile(r'what (bloatware|packages|apps)')),
+    ('backup', re.compile(r'\b(create|make|backup)\s+(backup|save)')),
+    ('restore', re.compile(r'\b(restore|reinstall)\s+(.+)')),
+    ('analyze', re.compile(r'\b(analyze|check|tell me about|info about|what is)\s+(.+)')),
+]
+
+PACKAGE_NAME_RE = re.compile(r'com\.[a-zA-Z0-9_.]+|[a-z]+\.[a-zA-Z0-9_.]+\.[a-zA-Z0-9_]+')
+
 class CommandParser:
     """Parse natural language commands into actions"""
     
     def __init__(self):
-        self.intent_patterns = {
-            'uninstall': [
-                re.compile(r'\b(remove|uninstall|delete|get rid of)\s+(.+)'),
-                re.compile(r'\b(disable|turn off)\s+(.+)'),
-            ],
-            'scan': [
-                re.compile(r'\b(scan|check|find|show|list)\s+(bloatware|packages|apps)'),
-                re.compile(r'what (bloatware|packages|apps)'),
-            ],
-            'backup': [
-                re.compile(r'\b(create|make|backup)\s+(backup|save)'),
-            ],
-            'restore': [
-                re.compile(r'\b(restore|reinstall)\s+(.+)'),
-            ],
-            'analyze': [
-                re.compile(r'\b(analyze|check|tell me about|info about|what is)\s+(.+)'),
-            ],
-        }
-        self.package_pattern = re.compile(r'com\.[a-zA-Z0-9_.]+|[a-z]+\.[a-zA-Z0-9_.]+\.[a-zA-Z0-9_]+')
+        # State removed for fast initialization
+        pass
     
     def parse_command(self, message: str) -> Dict:
         """
@@ -47,19 +43,18 @@ class CommandParser:
         """
         message_lower = message.lower().strip()
         
-        # Check each intent pattern
-        for intent, patterns in self.intent_patterns.items():
-            for pattern in patterns:
-                match = pattern.search(message_lower)
-                if match:
-                    entities = self._extract_entities(intent, match, message_lower)
-                    return {
-                        'intent': intent,
-                        'entities': entities,
-                        'confidence': 0.8,
-                        'actionable': True,
-                        'original_message': message
-                    }
+        # ⚡ Bolt: Iterating over flat list is much faster than nested dictionary loops
+        for intent, pattern in _INTENT_PATTERNS_FLAT:
+            match = pattern.search(message_lower)
+            if match:
+                entities = self._extract_entities(intent, match, message_lower)
+                return {
+                    'intent': intent,
+                    'entities': entities,
+                    'confidence': 0.8,
+                    'actionable': True,
+                    'original_message': message
+                }
         
         # No action detected - regular chat
         return {
@@ -95,7 +90,7 @@ class CommandParser:
     def _extract_package_names(self, text: str) -> List[str]:
         """Extract potential package names from text"""
         # Check for actual package format (com.example.package)
-        packages = self.package_pattern.findall(text)
+        packages = PACKAGE_NAME_RE.findall(text)
         
         if packages:
             return packages
