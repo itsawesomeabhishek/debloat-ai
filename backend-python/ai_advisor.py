@@ -9,6 +9,7 @@ import requests
 from typing import Dict
 from dotenv import load_dotenv
 
+from adb_operations import ADBOperations
 
 def _get_base_dir():
     """Return the directory where this script (or frozen exe) lives."""
@@ -50,14 +51,24 @@ class AIAdvisor:
     
     def analyze_package(self, package_name: str) -> Dict:
         """Analyze an Android package and return safety information"""
+        if not ADBOperations.is_valid_package_name(package_name):
+            return {
+                "error": "Invalid package name format",
+                "safetyLevel": "unknown",
+                "appName": package_name,
+                "description": "Invalid package name provided",
+                "recommendation": "Provide a valid package name"
+            }
+
         if not self.api_key:
             return {"error": "API key not configured. Add PERPLEXITY_API_KEY to .env file.", "safetyLevel": "unknown", "appName": package_name, "description": "AI analysis unavailable", "recommendation": "Configure API key to enable AI analysis"}
         
-        prompt = f"""You are an Android package analysis expert. Analyze package: {package_name}
+        system_instructions = """You are an Android package analysis expert.
+Your task is to analyze the provided Android package name and return safety information.
 
-Return ONLY valid JSON (no markdown, no explanation):
-{{
-  "packageName": "{package_name}",
+Return ONLY valid JSON (no markdown, no explanation) matching this exact structure:
+{
+  "packageName": "<the provided package name>",
   "summary": "Brief description in plain English",
   "purpose": "What this package does",
   "dependencies": ["list of packages that might depend on this"],
@@ -68,13 +79,15 @@ Return ONLY valid JSON (no markdown, no explanation):
   "technicalDetails": "Technical information",
   "bestCase": "Best case scenario if removed",
   "worstCase": "Worst case scenario if removed"
-}}
+}
 
 Risk categories:
 - Safe: Third-party apps, easily reinstallable
 - Caution: OEM apps, may affect minor features
 - Expert: May break functionality
 - Dangerous: Critical system components"""
+
+        user_input = f"Analyze this package: <package>{package_name}</package>"
 
         try:
             headers = {
@@ -89,7 +102,7 @@ Risk categories:
                 messages = [
                     {
                         "role": "user",
-                        "content": prompt
+                        "content": f"{system_instructions}\n\n{user_input}"
                     }
                 ]
             else:
@@ -97,11 +110,11 @@ Risk categories:
                 messages = [
                     {
                         "role": "system",
-                        "content": "You are an Android debloating expert. Always respond with valid JSON only."
+                        "content": system_instructions
                     },
                     {
                         "role": "user",
-                        "content": prompt
+                        "content": user_input
                     }
                 ]
             

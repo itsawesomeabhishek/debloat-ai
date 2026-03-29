@@ -1,4 +1,4 @@
-import { SafetyLevel } from '../types';
+import type { SafetyLevel } from '../types';
 
 // Shared filter utilities
 export const filterUtils = {

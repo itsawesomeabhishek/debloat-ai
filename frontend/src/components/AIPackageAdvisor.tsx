@@ -73,6 +73,10 @@ const AIPackageAdvisor: React.FC<AIPackageAdvisorProps> = ({ packageName, onClos
     }
   };
 
+  // ⚡ Bolt: Cache risk color object outside of the JSX return to avoid calling getRiskColor
+  // multiple times during render, improving performance and readability.
+  const riskColor = data ? getRiskColor(data.riskCategory) : null;
+
   return (
     <AnimatePresence>
       {packageName && (
@@ -254,7 +258,7 @@ const AIPackageAdvisor: React.FC<AIPackageAdvisorProps> = ({ packageName, onClos
             )}
 
             {/* Success State */}
-            {data && !loading && (
+            {data && !loading && riskColor && (
               <motion.div
                 className="space-y-4"
                 initial={{ opacity: 0 }}
@@ -265,20 +269,20 @@ const AIPackageAdvisor: React.FC<AIPackageAdvisorProps> = ({ packageName, onClos
                 <motion.div
                   className="rounded-lg px-4 py-4"
                   style={{
-                    background: getRiskColor(data.riskCategory).bg,
-                    border: `1px solid ${getRiskColor(data.riskCategory).border}`,
+                    background: riskColor.bg,
+                    border: `1px solid ${riskColor.border}`,
                   }}
                   variants={fadeSlideUp}
                 >
                   <div className="flex items-center gap-3">
-                    <div style={{ color: getRiskColor(data.riskCategory).text }}>
+                    <div style={{ color: riskColor.text }}>
                       {getRiskIcon(data.riskCategory)}
                     </div>
                     <div>
-                      <div className="text-xs font-medium mb-1" style={{ color: getRiskColor(data.riskCategory).text, opacity: 0.8 }}>
+                      <div className="text-xs font-medium mb-1" style={{ color: riskColor.text, opacity: 0.8 }}>
                         RISK CATEGORY
                       </div>
-                      <div className="text-lg font-bold" style={{ color: getRiskColor(data.riskCategory).text }}>
+                      <div className="text-lg font-bold" style={{ color: riskColor.text }}>
                         {data.riskCategory}
                       </div>
                     </div>
