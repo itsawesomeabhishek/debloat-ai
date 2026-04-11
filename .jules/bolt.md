@@ -7,3 +7,6 @@
 ## 2024-05-25 - Python String Parsing Overhead
 **Learning:** In Python backend scripts (e.g., `adb_operations.py`), iterating over large command outputs using `str.split('\n')` and modifying strings with `.replace()` and `.split('.')` inside loops introduces measurable overhead due to intermediate list allocations.
 **Action:** Always prefer `str.splitlines()` in list comprehensions combined with string slicing (e.g., `line[8:]`) and `str.find()` with slice indexing (`name[:dot_idx]`) for significantly faster string manipulation and parsing.
+## 2024-05-25 - React Array Re-evaluation Bottleneck
+**Learning:** Re-evaluating array statistics (e.g. counting types of packages) inside a `useEffect` using multiple `.filter()` passes that depends on both the large array AND a rapidly changing selection set causes significant CPU overhead, making selection toggles laggy.
+**Action:** Always extract static array computations into a `useMemo` block that only depends on the array itself, using a single-pass loop instead of multiple `.filter()` calls, and only merge dynamically changing states (like selection count) in the `useEffect`.

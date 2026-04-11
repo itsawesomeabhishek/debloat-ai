@@ -254,18 +254,28 @@ const PackageList: React.FC<PackageListProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshTrigger]);
 
-  // Update stats whenever packages change
+  // ⚡ Bolt: Cache base package stats to avoid O(4N) recalculation on every selection toggle.
+  // Single-pass loop replaces four separate .filter() calls.
+  const baseStats = useMemo(() => {
+    let safe = 0, caution = 0, expert = 0, dangerous = 0;
+    for (let i = 0; i < packages.length; i++) {
+      const level = packages[i].safetyLevel;
+      if (level === 'Safe') safe++;
+      else if (level === 'Caution') caution++;
+      else if (level === 'Expert') expert++;
+      else if (level === 'Dangerous') dangerous++;
+    }
+    return { total: packages.length, safe, caution, expert, dangerous };
+  }, [packages]);
+
+  // Update stats whenever base stats or selection changes
   useEffect(() => {
     const stats: PackageStats = {
-      total: packages.length,
-      safe: packages.filter((p) => p.safetyLevel === 'Safe').length,
-      caution: packages.filter((p) => p.safetyLevel === 'Caution').length,
-      expert: packages.filter((p) => p.safetyLevel === 'Expert').length,
-      dangerous: packages.filter((p) => p.safetyLevel === 'Dangerous').length,
+      ...baseStats,
       selected: selectedPackages.size,
     };
     onStatsChange(stats);
-  }, [packages, selectedPackages, onStatsChange]);
+  }, [baseStats, selectedPackages.size, onStatsChange]);
 
   const filtered = useMemo(() => {
     const searchLower = search.toLowerCase();
