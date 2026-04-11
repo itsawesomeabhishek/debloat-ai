@@ -6,6 +6,9 @@ import subprocess
 import json
 from typing import List, Dict, Optional
 import re
+import shutil
+import os
+import sys
 
 
 class ADBError(Exception):
@@ -73,10 +76,6 @@ class ADBOperations:
         return bool(re.match(pattern, package_name))
 
     def __init__(self):
-        import shutil
-        import os
-        import sys
-        
         # Determine base directory (PyInstaller exe or script location)
         if getattr(sys, 'frozen', False):
             base_dir = os.path.dirname(sys.executable)
