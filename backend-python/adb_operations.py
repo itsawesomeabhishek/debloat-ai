@@ -143,11 +143,28 @@ class ADBOperations:
             parts = device_line.split()
             serial = parts[0]
             
-            # Get device properties
-            model = self._get_property("ro.product.model")
-            product = self._get_property("ro.product.name")
-            manufacturer = self._get_property("ro.product.manufacturer")
-            android_version = self._get_property("ro.build.version.release")
+            # ⚡ Bolt: Batch ADB commands to minimize subprocess overhead
+            # Fetch all required properties in a single shell call
+            try:
+                props_output = self._run_command([
+                    self.adb_path, "shell",
+                    "getprop ro.product.model; "
+                    "getprop ro.product.name; "
+                    "getprop ro.product.manufacturer; "
+                    "getprop ro.build.version.release"
+                ])
+                lines = [line.strip() for line in props_output.strip().splitlines()]
+                # Pad with "Unknown" in case some properties are missing
+                lines.extend(["Unknown"] * (4 - len(lines)))
+                model, product, manufacturer, android_version = lines[:4]
+
+                # Replace empty strings with Unknown
+                model = model if model else "Unknown"
+                product = product if product else "Unknown"
+                manufacturer = manufacturer if manufacturer else "Unknown"
+                android_version = android_version if android_version else "Unknown"
+            except Exception:
+                model = product = manufacturer = android_version = "Unknown"
             
             return {
                 "name": serial,
