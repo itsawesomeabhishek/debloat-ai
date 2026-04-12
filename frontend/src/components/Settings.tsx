@@ -177,6 +177,7 @@ const Settings: React.FC = () => {
             </p>
           </div>
           <button
+            aria-label="Toggle dark mode"
             onClick={() => updateSetting('darkMode', !settings.darkMode)}
             className={`
               relative inline-flex h-6 w-11 items-center border-2 transition-colors self-start sm:self-auto rounded-full
@@ -239,6 +240,7 @@ const Settings: React.FC = () => {
             </p>
           </div>
           <button
+            aria-label="Toggle advanced options"
             onClick={() => {
               const newValue = !settings.showAdvancedOptions;
               updateSetting('showAdvancedOptions', newValue);
