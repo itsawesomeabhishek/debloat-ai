@@ -143,7 +143,7 @@ const PackageListItem = React.memo(({ pkg, isSelected, isLightMode, toggleSelect
             background: isLightMode ? 'rgba(46, 196, 182, 0.15)' : 'rgba(88, 166, 175, 0.15)',
             border: isLightMode ? '1px solid rgba(46, 196, 182, 0.20)' : '1px solid rgba(88, 166, 175, 0.20)',
           }}
-          title="AI Safety Analysis"
+          title="AI Safety Analysis" aria-label="AI Safety Analysis"
         >
           <FiZap className="w-4 h-4" style={{ color: isLightMode ? '#2EC4B6' : '#58A6AF' }} />
         </button>
